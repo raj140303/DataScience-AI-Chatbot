@@ -1,3 +1,4 @@
+flask
 groq 
 langchain_community 
 qdrant_client 
