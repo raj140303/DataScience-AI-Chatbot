@@ -1,83 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enter API Key - AI Assistant</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .container {
-            max-width: 500px;
-            margin: 80px auto;
-            padding: 30px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            text-align: center;
-            font-family: 'Poppins', sans-serif;
-        }
+import os
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from logger import CustomLogger  # Ensure logger.py exists and works
+from chatbot import Chatbot      # Ensure __init__.py and Chatbot class work
 
-        .container img {
-            height: 60px;
-            margin-bottom: 15px;
-        }
+def create_app():
+    """Create and configure the Flask application."""
+    app = Flask(__name__)
+    app.secret_key = os.urandom(24)  # Needed by Flask
 
-        .container h1 {
-            font-size: 22px;
-            color: #007fd3;
-            margin-bottom: 20px;
-        }
+    logger = CustomLogger().get_logger()  # Initialize custom logger
+    groq_api_key = os.getenv("GROQ_API_KEY")  # Load from env variable
 
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            font-size: 14px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            margin-bottom: 15px;
-        }
+    @app.route('/', methods=['GET'])
+    def index():
+        """Redirect to chat if API key is set; else show error."""
+        if not groq_api_key:
+            logger.error("GROQ_API_KEY not set in environment.")
+            return "<h3>Error: GROQ_API_KEY is not set in the environment.</h3>", 500
+        return redirect(url_for('chat'))
 
-        button {
-            padding: 10px 20px;
-            font-size: 14px;
-            background-color: #007fd3;
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-        }
+    @app.route('/chat')
+    def chat():
+        """Render the chat interface."""
+        if not groq_api_key:
+            return redirect(url_for('index'))
+        return render_template('chat.html')
 
-        button:hover {
-            background-color: #0269d7;
-        }
+    @app.route('/ask', methods=['POST'])
+    def ask():
+        """Handle user questions and return responses."""
+        question = request.json.get('question')
+        print("DEBUG: Received question ->", question)
+        try:
+            if not groq_api_key:
+                return jsonify({"response": "API Key is not configured."}), 500
 
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
+            chatbot_instance = Chatbot(groq_api_key)
+            response = chatbot_instance.ask(question)
+            logger.info(f"User asked: {question}")
+            return jsonify({"response": response})
+        except Exception as e:
+            logger.error(f"Error processing question '{question}': {e}")
+            return jsonify({"response": "An error occurred while processing your request."}), 500
 
-        p {
-            font-size: 13px;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <img src="{{ url_for('static', filename='bot.png') }}" alt="Logo">
-        <h1>Enter Your GROQ API Key</h1>
+    @app.route('/logout', methods=['POST'])
+    def logout():
+        """Optional logout route, does nothing now."""
+        return redirect(url_for('index'))
 
-        {% if error_message %}
-            <div class="error-message">{{ error_message }}</div>
-        {% endif %}
-
-        <form method="POST">
-            <input type="text" name="api_key" placeholder="GROQ API Key" required>
-            <button type="submit">Save</button>
-        </form>
-
-        <p>After entering your API key, you will be redirected to the chatbot.</p>
-    </div>
-</body>
-</html>
+    return app
