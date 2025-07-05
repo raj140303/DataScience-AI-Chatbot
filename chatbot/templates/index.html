@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter API Key - AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container img {
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .container h1 {
+            font-size: 22px;
+            color: #007fd3;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #007fd3;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0269d7;
+        }
+
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        p {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='bot.png') }}" alt="Logo">
+        <h1>Enter Your GROQ API Key</h1>
+
+        {% if error_message %}
+            <div class="error-message">{{ error_message }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="text" name="api_key" placeholder="GROQ API Key" required>
+            <button type="submit">Save</button>
+        </form>
+
+        <p>After entering your API key, you will be redirected to the chatbot.</p>
+    </div>
+</body>
+</html>
